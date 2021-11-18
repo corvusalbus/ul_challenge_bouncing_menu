@@ -57,7 +57,12 @@ class _FavouritePageState extends State<FavouritePage>
     super.initState();
     animationController =
         AnimationController(vsync: this, duration: Duration(seconds: 1));
-    animationController.addListener(() => setState(() {}));
+    animationController.addListener(() => setState(() {
+          if (animationController.value == 1) {
+            animationController.reset();
+          }
+          ;
+        }));
   }
 
   @override
@@ -78,17 +83,20 @@ class _FavouritePageState extends State<FavouritePage>
                     child: Text('reset'),
                   ),
                 ]),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Container(
-                      width: constraints.maxWidth,
-                      height: constraints.biggest.height,
-                      child: CustomPaint(
-                        foregroundPainter: SpringPainterVertical(
-                            value: animationController.value),
-                      ),
-                    );
-                  },
+                Padding(
+                  padding: const EdgeInsets.all(60.0),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Container(
+                        width: constraints.maxWidth,
+                        height: constraints.biggest.height,
+                        child: CustomPaint(
+                          foregroundPainter: SpringPainterVertical(
+                              value: animationController.value),
+                        ),
+                      );
+                    },
+                  ),
                 )
               ],
             ),
@@ -99,25 +107,23 @@ class _FavouritePageState extends State<FavouritePage>
 
 class SpringPainterVertical extends CustomPainter {
   final double value;
+  final double startedvalue;
 
   SpringPainterVertical({required this.value});
   @override
   void paint(Canvas canvas, Size size) {
     final white = Paint()..color = Colors.black;
     final path = Path();
-    // final startPointXL =
-    //     (size.width *0.5) ;
-    final x0 = (size.width * 0.5);
-    //final controlPointXL = x0 * cos(20 * value) + 1 * sin(20 * value);
-    final controlPointXL = exp(-3 * value) * cos(6 * pi * value) * size.width;
-    // final endPointXL =
-    //     (size.width * (0.5 + 0.5 * x3)) - size.height * thickness * 0.5;
-    final amplitude = sqrt(x0 * x0 + 1);
+    final controlPointXL = exp(-3 * value) *
+        cos(8 * pi * value) *
+        startedvalue; // * size.width * 0.5;
 
-    path.moveTo(size.width * 0.5, 0.0);
-    path.quadraticBezierTo(-controlPointXL + size.width * 0.5,
-        size.height * 0.5, size.width * 0.5, size.height);
-    print(controlPointXL);
+    path.moveTo(0.0, 0.0);
+    path.quadraticBezierTo(
+        -controlPointXL, size.height * 0.5, 0.0, size.height);
+    path.lineTo(size.width, size.height);
+    path.quadraticBezierTo(
+        -controlPointXL + size.width, size.height * 0.5, size.width, 0.0);
     canvas.drawPath(path, white);
   }
 
