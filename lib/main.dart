@@ -50,18 +50,41 @@ class FavouritePage extends StatefulWidget {
 
 class _FavouritePageState extends State<FavouritePage>
     with TickerProviderStateMixin {
-  late AnimationController animationController;
+  late AnimationController animationControllerBounce;
+  late AnimationController animationControllerSlide;
+  late AnimationController animationControllerSlideReverse;
   double power = 1;
+  int indexActive = 0;
 
   @override
   void initState() {
     super.initState();
-    animationController =
+    animationControllerBounce =
         AnimationController(vsync: this, duration: Duration(seconds: 1));
-    animationController.addListener(() => setState(() {
-          if (animationController.value == 1) {
-            animationController.reset();
+    animationControllerBounce.addListener(() => setState(() {
+          if (animationControllerBounce.value == 1) {
+            animationControllerBounce.reset();
             power = 1;
+          }
+        }));
+
+    animationControllerSlide =
+        AnimationController(vsync: this, duration: Duration(seconds: 1));
+
+    animationControllerSlide.addListener(() => setState(() {
+          if (animationControllerSlide.isCompleted) {
+            indexActive += 1;
+            animationControllerSlide.reset();
+          }
+        }));
+
+    animationControllerSlideReverse =
+        AnimationController(vsync: this, duration: Duration(seconds: 1));
+
+    animationControllerSlideReverse.addListener(() => setState(() {
+          if (animationControllerSlideReverse.isCompleted) {
+            indexActive -= 1;
+            animationControllerSlide.reset();
           }
         }));
   }
@@ -72,66 +95,105 @@ class _FavouritePageState extends State<FavouritePage>
       onHorizontalDragUpdate: _handleDragUpdate,
       onHorizontalDragEnd: _handleDragEnd,
       child: AnimatedBuilder(
-          animation: animationController,
-          builder: (context, _) {
-            return Scaffold(
-              body: Stack(
-                children: [
-                  Column(children: [
-                    SizedBox(height: 40.0),
-                    ElevatedButton(
-                      onPressed: () => animationController.forward(),
-                      child: Text('Test spring'),
+          animation: animationControllerSlide,
+          builder: (context, slidewidget) {
+            return AnimatedBuilder(
+                animation: animationControllerBounce,
+                builder: (context, _) {
+                  return Scaffold(
+                    body: Stack(
+                      children: [
+                        Column(children: [
+                          SizedBox(height: 40.0),
+                          ElevatedButton(
+                            onPressed: () =>
+                                animationControllerBounce.forward(),
+                            child: Text('Test spring'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => animationControllerBounce.reset(),
+                            child: Text('reset'),
+                          ),
+                        ]),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            return BouncingCard(
+                              power: power,
+                              animationController: animationControllerBounce,
+                              height: constraints.maxHeight,
+                              width: constraints.biggest.width,
+                              color: Colors.black,
+                              xPosition: animationControllerSlide.value *
+                                      constraints.biggest.width +
+                                  indexActive * constraints.biggest.width,
+                            );
+                          },
+                        ),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            return BouncingCard(
+                              color: Colors.red,
+                              power: power,
+                              animationController: animationControllerBounce,
+                              height: constraints.maxHeight,
+                              width: constraints.biggest.width,
+                              xPosition: animationControllerSlide.value *
+                                      constraints.biggest.width +
+                                  (indexActive - 1) * constraints.biggest.width,
+                            );
+                          },
+                        ),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            return BouncingCard(
+                              color: Colors.green,
+                              power: power,
+                              animationController: animationControllerBounce,
+                              height: constraints.maxHeight,
+                              width: constraints.biggest.width,
+                              xPosition: animationControllerSlide.value *
+                                      constraints.biggest.width +
+                                  (indexActive - 2) * constraints.biggest.width,
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                    ElevatedButton(
-                      onPressed: () => animationController.reset(),
-                      child: Text('reset'),
-                    ),
-                  ]),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      return BouncingCard(
-                        power: power,
-                        animationController: animationController,
-                        height: constraints.maxHeight,
-                        width: constraints.biggest.width,
-                        color: Colors.black,
-                        xPosition: power,
-                      );
-                    },
-                  ),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      return BouncingCard(
-                        color: Colors.red,
-                        power: power,
-                        animationController: animationController,
-                        height: constraints.maxHeight,
-                        width: constraints.biggest.width,
-                        xPosition: power - constraints.biggest.width,
-                      );
-                    },
-                  ),
-                ],
-              ),
-            );
+                  );
+                });
           }),
     );
   }
 
   void _handleDragEnd(DragEndDetails details) {
     print('end');
-    animationController.forward();
+    animationControllerBounce.forward();
+    if (animationControllerSlide.value > 0.5 &&
+        animationControllerSlide.value != 1.0) {
+      animationControllerSlide.forward();
+    }
+    if (animationControllerSlide.value < 0.5 &&
+        animationControllerSlide.value != 0.0) {
+      animationControllerSlide.reverse();
+    }
+
+    // if (animationControllerSlide.value == 0) {
+    //   indexActive += 1;
+    //   animationControllerSlide.reset();
+    // }
+    print('indexActive $indexActive');
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
     if (details.primaryDelta != null) {
       if (details.primaryDelta! > 0.0) {
+        animationControllerSlide.value += details.primaryDelta! / 250;
         power += details.primaryDelta!;
-        // / 250;
       }
       if (details.primaryDelta! < 0.0) {
-        power -= details.primaryDelta!; // / 250;
+        animationControllerSlide.value += details.primaryDelta! / 250;
+        power += details.primaryDelta!; // / 250;
+
       }
       setState(() {});
       print('power $power');
