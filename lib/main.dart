@@ -62,7 +62,7 @@ class _FavouritePageState extends State<FavouritePage>
     animationControllerBounce =
         AnimationController(vsync: this, duration: Duration(seconds: 1));
     animationControllerBounce.addListener(() => setState(() {
-          if (animationControllerBounce.value == 1) {
+          if (animationControllerBounce.isCompleted == 1) {
             animationControllerBounce.reset();
             power = 1;
           }
@@ -84,7 +84,7 @@ class _FavouritePageState extends State<FavouritePage>
     animationControllerSlideReverse.addListener(() => setState(() {
           if (animationControllerSlideReverse.isCompleted) {
             indexActive -= 1;
-            animationControllerSlide.reset();
+            animationControllerSlideReverse.reset();
           }
         }));
   }
@@ -95,71 +95,74 @@ class _FavouritePageState extends State<FavouritePage>
       onHorizontalDragUpdate: _handleDragUpdate,
       onHorizontalDragEnd: _handleDragEnd,
       child: AnimatedBuilder(
-          animation: animationControllerSlide,
+          animation: animationControllerSlideReverse,
           builder: (context, slidewidget) {
             return AnimatedBuilder(
-                animation: animationControllerBounce,
-                builder: (context, _) {
-                  return Scaffold(
-                    body: Stack(
-                      children: [
-                        Column(children: [
-                          SizedBox(height: 40.0),
-                          ElevatedButton(
-                            onPressed: () =>
-                                animationControllerBounce.forward(),
-                            child: Text('Test spring'),
+                animation: animationControllerSlide,
+                builder: (context, slidewidget) {
+                  return AnimatedBuilder(
+                      animation: animationControllerBounce,
+                      builder: (context, _) {
+                        return Scaffold(
+                          body: Stack(
+                            children: [
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return BouncingCard(
+                                    power: power,
+                                    animationController:
+                                        animationControllerBounce,
+                                    height: constraints.maxHeight,
+                                    width: constraints.biggest.width,
+                                    color: Colors.black,
+                                    xPosition: (animationControllerSlide.value -
+                                                animationControllerSlideReverse
+                                                    .value) *
+                                            constraints.biggest.width +
+                                        indexActive * constraints.biggest.width,
+                                  );
+                                },
+                              ),
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return BouncingCard(
+                                    color: Colors.red,
+                                    power: power,
+                                    animationController:
+                                        animationControllerBounce,
+                                    height: constraints.maxHeight,
+                                    width: constraints.biggest.width,
+                                    xPosition: (animationControllerSlide.value -
+                                                animationControllerSlideReverse
+                                                    .value) *
+                                            constraints.biggest.width +
+                                        (indexActive - 1) *
+                                            constraints.biggest.width,
+                                  );
+                                },
+                              ),
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return BouncingCard(
+                                    color: Colors.green,
+                                    power: power,
+                                    animationController:
+                                        animationControllerBounce,
+                                    height: constraints.maxHeight,
+                                    width: constraints.biggest.width,
+                                    xPosition: (animationControllerSlide.value -
+                                                animationControllerSlideReverse
+                                                    .value) *
+                                            constraints.biggest.width +
+                                        (indexActive - 2) *
+                                            constraints.biggest.width,
+                                  );
+                                },
+                              ),
+                            ],
                           ),
-                          ElevatedButton(
-                            onPressed: () => animationControllerBounce.reset(),
-                            child: Text('reset'),
-                          ),
-                        ]),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            return BouncingCard(
-                              power: power,
-                              animationController: animationControllerBounce,
-                              height: constraints.maxHeight,
-                              width: constraints.biggest.width,
-                              color: Colors.black,
-                              xPosition: animationControllerSlide.value *
-                                      constraints.biggest.width +
-                                  indexActive * constraints.biggest.width,
-                            );
-                          },
-                        ),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            return BouncingCard(
-                              color: Colors.red,
-                              power: power,
-                              animationController: animationControllerBounce,
-                              height: constraints.maxHeight,
-                              width: constraints.biggest.width,
-                              xPosition: animationControllerSlide.value *
-                                      constraints.biggest.width +
-                                  (indexActive - 1) * constraints.biggest.width,
-                            );
-                          },
-                        ),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            return BouncingCard(
-                              color: Colors.green,
-                              power: power,
-                              animationController: animationControllerBounce,
-                              height: constraints.maxHeight,
-                              width: constraints.biggest.width,
-                              xPosition: animationControllerSlide.value *
-                                      constraints.biggest.width +
-                                  (indexActive - 2) * constraints.biggest.width,
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  );
+                        );
+                      });
                 });
           }),
     );
@@ -177,6 +180,15 @@ class _FavouritePageState extends State<FavouritePage>
       animationControllerSlide.reverse();
     }
 
+    if (animationControllerSlideReverse.value > 0.5 &&
+        animationControllerSlideReverse.value != 1.0) {
+      animationControllerSlideReverse.forward();
+    }
+    if (animationControllerSlideReverse.value < 0.5 &&
+        animationControllerSlideReverse.value != 0.0) {
+      animationControllerSlideReverse.reverse();
+    }
+
     // if (animationControllerSlide.value == 0) {
     //   indexActive += 1;
     //   animationControllerSlide.reset();
@@ -186,19 +198,18 @@ class _FavouritePageState extends State<FavouritePage>
 
   void _handleDragUpdate(DragUpdateDetails details) {
     if (details.primaryDelta != null) {
-      if (details.primaryDelta! > 0.0) {
-        animationControllerSlide.value += details.primaryDelta! / 250;
-        power += details.primaryDelta!;
-      }
       if (details.primaryDelta! < 0.0) {
-        animationControllerSlide.value += details.primaryDelta! / 250;
-        power += details.primaryDelta!; // / 250;
-
+        animationControllerSlide.value -= details.primaryDelta! / 250;
+        power -= details.primaryDelta!;
+      }
+      if (details.primaryDelta! > 0.0) {
+        animationControllerSlideReverse.value += details.primaryDelta! / 250;
+        power -= details.primaryDelta!; // / 250;
       }
       setState(() {});
-      print('power $power');
+      // print('power $power');
     }
-    print('power $power');
+    //print('power $power');
   }
 }
 
