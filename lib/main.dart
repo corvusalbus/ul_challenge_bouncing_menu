@@ -62,7 +62,7 @@ class _FavouritePageState extends State<FavouritePage>
     animationControllerBounce =
         AnimationController(vsync: this, duration: Duration(seconds: 1));
     animationControllerBounce.addListener(() => setState(() {
-          if (animationControllerBounce.isCompleted == 1) {
+          if (animationControllerBounce.isCompleted) {
             animationControllerBounce.reset();
             power = 1;
           }
