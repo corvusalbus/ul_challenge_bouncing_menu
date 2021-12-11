@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:ul_challenge_bouncing_menu/bouncing_card.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +16,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.deepPurple,
       ),
       home: FavouritePage(),
     );
@@ -53,18 +54,19 @@ class _FavouritePageState extends State<FavouritePage>
   late AnimationController animationControllerBounce;
   late AnimationController animationControllerSlide;
   late AnimationController animationControllerSlideReverse;
-  double power = 1;
+  Power power = Power(maxValue: 100);
+
   int indexActive = 0;
 
   @override
   void initState() {
     super.initState();
     animationControllerBounce =
-        AnimationController(vsync: this, duration: Duration(seconds: 1));
+        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
     animationControllerBounce.addListener(() => setState(() {
           if (animationControllerBounce.isCompleted) {
             animationControllerBounce.reset();
-            power = 1;
+            power.resetPower();
           }
         }));
 
@@ -104,12 +106,16 @@ class _FavouritePageState extends State<FavouritePage>
                       animation: animationControllerBounce,
                       builder: (context, _) {
                         return Scaffold(
+                          appBar: AppBar(
+                            title: Text('Favorite'),
+                          ),
+                          backgroundColor: Colors.deepPurple[900],
                           body: Stack(
                             children: [
                               LayoutBuilder(
                                 builder: (context, constraints) {
-                                  return BouncingCard(
-                                    power: power,
+                                  return FavoritePage(
+                                    power: power.value,
                                     animationController:
                                         animationControllerBounce,
                                     height: constraints.maxHeight,
@@ -125,9 +131,9 @@ class _FavouritePageState extends State<FavouritePage>
                               ),
                               LayoutBuilder(
                                 builder: (context, constraints) {
-                                  return BouncingCard(
+                                  return FavoritePage(
                                     color: Colors.red,
-                                    power: power,
+                                    power: power.value,
                                     animationController:
                                         animationControllerBounce,
                                     height: constraints.maxHeight,
@@ -143,9 +149,9 @@ class _FavouritePageState extends State<FavouritePage>
                               ),
                               LayoutBuilder(
                                 builder: (context, constraints) {
-                                  return BouncingCard(
+                                  return FavoritePage(
                                     color: Colors.green,
-                                    power: power,
+                                    power: power.value,
                                     animationController:
                                         animationControllerBounce,
                                     height: constraints.maxHeight,
@@ -155,6 +161,24 @@ class _FavouritePageState extends State<FavouritePage>
                                                     .value) *
                                             constraints.biggest.width +
                                         (indexActive - 2) *
+                                            constraints.biggest.width,
+                                  );
+                                },
+                              ),
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return FavoritePage(
+                                    color: Colors.pink,
+                                    power: power.value,
+                                    animationController:
+                                        animationControllerBounce,
+                                    height: constraints.maxHeight,
+                                    width: constraints.biggest.width,
+                                    xPosition: (animationControllerSlide.value -
+                                                animationControllerSlideReverse
+                                                    .value) *
+                                            constraints.biggest.width +
+                                        (indexActive - 3) *
                                             constraints.biggest.width,
                                   );
                                 },
@@ -169,7 +193,6 @@ class _FavouritePageState extends State<FavouritePage>
   }
 
   void _handleDragEnd(DragEndDetails details) {
-    print('end');
     animationControllerBounce.forward();
     if (animationControllerSlide.value > 0.5 &&
         animationControllerSlide.value != 1.0) {
@@ -200,11 +223,11 @@ class _FavouritePageState extends State<FavouritePage>
     if (details.primaryDelta != null) {
       if (details.primaryDelta! < 0.0) {
         animationControllerSlide.value -= details.primaryDelta! / 250;
-        power -= details.primaryDelta!;
+        power.addPower(-details.primaryDelta!);
       }
       if (details.primaryDelta! > 0.0) {
         animationControllerSlideReverse.value += details.primaryDelta! / 250;
-        power -= details.primaryDelta!; // / 250;
+        power.addPower(-details.primaryDelta!); // / 250;
       }
       setState(() {});
       // print('power $power');
@@ -213,8 +236,14 @@ class _FavouritePageState extends State<FavouritePage>
   }
 }
 
-class BouncingCard extends StatelessWidget {
-  const BouncingCard(
+class FavoritePage extends StatelessWidget {
+  final double power;
+  final double xPosition;
+  final AnimationController animationController;
+  final double width;
+  final double height;
+  final Color color;
+  const FavoritePage(
       {Key? key,
       required this.power,
       required this.animationController,
@@ -224,60 +253,39 @@ class BouncingCard extends StatelessWidget {
       required this.xPosition})
       : super(key: key);
 
-  final double power;
-  final double xPosition;
-  final AnimationController animationController;
-//  final BoxConstraints constraints;
-  final double width;
-  final double height;
-  final Color color;
   @override
   Widget build(BuildContext context) {
-    return Transform(
-      transform: Matrix4.identity()..translate(-xPosition, 0.0),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 60.0, vertical: 120.0),
-        child: Container(
-          width: width,
-          height: height,
-          child: CustomPaint(
-            foregroundPainter: SpringPainterVertical(
-                startedvalue: power,
-                value: animationController.value,
-                color: color),
-          ),
-        ),
-      ),
+    return Stack(
+      children: [
+        BouncingCard(
+            power: power,
+            animationController: animationController,
+            height: height,
+            width: width,
+            color: color,
+            xPosition: xPosition)
+      ],
     );
   }
 }
 
-class SpringPainterVertical extends CustomPainter {
-  final double value;
-  final double startedvalue;
-  final Color color;
+class Power {
+  double value = 1;
+  final double maxValue;
+  Power({required this.maxValue});
 
-  SpringPainterVertical(
-      {required this.color, required this.startedvalue, required this.value});
-  @override
-  void paint(Canvas canvas, Size size) {
-    final white = Paint()..color = color;
-    final path = Path();
-    final controlPointXL = exp(-3 * value) *
-        cos(8 * pi * value) *
-        startedvalue; // * size.width * 0.5;
-
-    path.moveTo(0.0, 0.0);
-    path.quadraticBezierTo(
-        -controlPointXL, size.height * 0.5, 0.0, size.height);
-    path.lineTo(size.width, size.height);
-    path.quadraticBezierTo(
-        -controlPointXL + size.width, size.height * 0.5, size.width, 0.0);
-    canvas.drawPath(path, white);
+  void addPower(double addPower) {
+    final tmpPower = value + addPower;
+    if (tmpPower > maxValue) {
+      value = maxValue;
+    } else if (tmpPower < -maxValue) {
+      value = -maxValue;
+    } else {
+      value = tmpPower;
+    }
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
+  void resetPower() {
+    value = 1;
   }
 }
