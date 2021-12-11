@@ -1,7 +1,5 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:ul_challenge_bouncing_menu/bouncing_card.dart';
+import 'package:ul_challenge_bouncing_menu/favorite_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -71,7 +69,7 @@ class _FavouritePageState extends State<FavouritePage>
         }));
 
     animationControllerSlide =
-        AnimationController(vsync: this, duration: Duration(seconds: 1));
+        AnimationController(vsync: this, duration: Duration(milliseconds: 200));
 
     animationControllerSlide.addListener(() => setState(() {
           if (animationControllerSlide.isCompleted) {
@@ -81,7 +79,7 @@ class _FavouritePageState extends State<FavouritePage>
         }));
 
     animationControllerSlideReverse =
-        AnimationController(vsync: this, duration: Duration(seconds: 1));
+        AnimationController(vsync: this, duration: Duration(milliseconds: 200));
 
     animationControllerSlideReverse.addListener(() => setState(() {
           if (animationControllerSlideReverse.isCompleted) {
@@ -108,6 +106,8 @@ class _FavouritePageState extends State<FavouritePage>
                         return Scaffold(
                           appBar: AppBar(
                             title: Text('Favorite'),
+                            centerTitle: true,
+                            leading: Icon(Icons.menu),
                           ),
                           backgroundColor: Colors.deepPurple[900],
                           body: Stack(
@@ -115,12 +115,15 @@ class _FavouritePageState extends State<FavouritePage>
                               LayoutBuilder(
                                 builder: (context, constraints) {
                                   return FavoritePage(
+                                    placeName: 'BURGER PLAZA',
+                                    timeAgo: '45 MIN',
+                                    title: 'DINNER WITH FRIENDS',
                                     power: power.value,
                                     animationController:
                                         animationControllerBounce,
                                     height: constraints.maxHeight,
                                     width: constraints.biggest.width,
-                                    color: Colors.black,
+                                    color: Colors.redAccent[200]!,
                                     xPosition: (animationControllerSlide.value -
                                                 animationControllerSlideReverse
                                                     .value) *
@@ -132,7 +135,10 @@ class _FavouritePageState extends State<FavouritePage>
                               LayoutBuilder(
                                 builder: (context, constraints) {
                                   return FavoritePage(
-                                    color: Colors.red,
+                                    placeName: 'NATIONAL STADIUM',
+                                    timeAgo: '1D',
+                                    title: 'GREAT MATCH!',
+                                    color: Colors.orange[300]!,
                                     power: power.value,
                                     animationController:
                                         animationControllerBounce,
@@ -150,7 +156,10 @@ class _FavouritePageState extends State<FavouritePage>
                               LayoutBuilder(
                                 builder: (context, constraints) {
                                   return FavoritePage(
-                                    color: Colors.green,
+                                    placeName: 'BURGER PLAZA',
+                                    timeAgo: '3D',
+                                    title: 'BREAKFAST WITH ICE CREAM',
+                                    color: Colors.blueGrey[300]!,
                                     power: power.value,
                                     animationController:
                                         animationControllerBounce,
@@ -161,24 +170,6 @@ class _FavouritePageState extends State<FavouritePage>
                                                     .value) *
                                             constraints.biggest.width +
                                         (indexActive - 2) *
-                                            constraints.biggest.width,
-                                  );
-                                },
-                              ),
-                              LayoutBuilder(
-                                builder: (context, constraints) {
-                                  return FavoritePage(
-                                    color: Colors.pink,
-                                    power: power.value,
-                                    animationController:
-                                        animationControllerBounce,
-                                    height: constraints.maxHeight,
-                                    width: constraints.biggest.width,
-                                    xPosition: (animationControllerSlide.value -
-                                                animationControllerSlideReverse
-                                                    .value) *
-                                            constraints.biggest.width +
-                                        (indexActive - 3) *
                                             constraints.biggest.width,
                                   );
                                 },
@@ -233,39 +224,6 @@ class _FavouritePageState extends State<FavouritePage>
       // print('power $power');
     }
     //print('power $power');
-  }
-}
-
-class FavoritePage extends StatelessWidget {
-  final double power;
-  final double xPosition;
-  final AnimationController animationController;
-  final double width;
-  final double height;
-  final Color color;
-  const FavoritePage(
-      {Key? key,
-      required this.power,
-      required this.animationController,
-      required this.height,
-      required this.width,
-      required this.color,
-      required this.xPosition})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        BouncingCard(
-            power: power,
-            animationController: animationController,
-            height: height,
-            width: width,
-            color: color,
-            xPosition: xPosition)
-      ],
-    );
   }
 }
 
