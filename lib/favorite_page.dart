@@ -107,41 +107,87 @@ class FavoritePage extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       fontSize: 14.0)),
               SizedBox(width: 16.0),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 60.0),
-                child: ListTile(
-                  leading: CircleAvatar(),
-                  title: Row(
-                    children: [
-                      const Icon(
-                        Icons.star,
-                        color: Colors.white,
-                      ),
-                      const Icon(
-                        Icons.star,
-                        color: Colors.white,
-                      ),
-                      const Icon(
-                        Icons.star,
-                        color: Colors.white,
-                      ),
-                      const Icon(
-                        Icons.star,
-                        color: Colors.white,
-                      ),
-                      const Icon(
-                        Icons.star,
-                        color: Colors.white,
-                      )
-                    ],
-                  ),
-                ),
+              Expanded(
+                child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 60.0),
+                    child: RatingStarList(avatarList: [
+                      AvatarAndRatingStar(
+                          avatar: AssetImage('assets/persons/person1.jpg'),
+                          rating: 3),
+                      AvatarAndRatingStar(
+                          avatar: AssetImage('assets/persons/person2.jpg'),
+                          rating: 4),
+                      AvatarAndRatingStar(
+                          avatar: AssetImage('assets/persons/person3.jpg'),
+                          rating: 3),
+                      AvatarAndRatingStar(
+                          avatar: AssetImage('assets/persons/person4.jpg'),
+                          rating: 5)
+                    ], progress: 1)),
               ),
-              ListTile()
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+class AvatarAndRatingStar extends StatelessWidget {
+  final ImageProvider<Object> avatar;
+  final int rating;
+  final int _maxRating = 5;
+  const AvatarAndRatingStar(
+      {Key? key, required this.avatar, required this.rating})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    List<Icon> starsList = [];
+    for (var i = 0; i < rating; i++) {
+      starsList.add(
+        const Icon(
+          Icons.star,
+          color: Colors.white,
+        ),
+      );
+    }
+    for (var i = rating; i < _maxRating; i++) {
+      starsList.add(
+        const Icon(
+          Icons.star_border,
+          color: Colors.white54,
+        ),
+      );
+    }
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundImage: avatar,
+      ),
+      title: Row(
+        children: starsList,
+      ),
+    );
+  }
+}
+
+class RatingStarList extends StatelessWidget {
+  final List<AvatarAndRatingStar> avatarList;
+  final double progress;
+  const RatingStarList(
+      {Key? key, required this.avatarList, required this.progress})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedList(
+      initialItemCount: avatarList.length,
+      itemBuilder: (context, index, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: avatarList[index],
+        );
+      },
     );
   }
 }
